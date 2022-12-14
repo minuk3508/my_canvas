@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ColorResult, RGBColor, SketchPicker } from "react-color";
 import styled, { keyframes } from "styled-components";
 import { BiEraser } from "react-icons/bi";
@@ -16,8 +16,6 @@ const DEFAULT_WEIGHT = 1.5;
 
 export default function Template() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const weghtModalRef = useRef<HTMLDivElement | null>(null);
-  const weghtModaltestRef = useRef<HTMLDivElement | null>(null);
   const [getCtx, setGetCtx] = useState<CanvasRenderingContext2D>();
   const [painting, setPainting] = useState<boolean>(false);
   const [displayColorPicker, setDisplayColorPicker] = useState<boolean>(false);
@@ -52,15 +50,16 @@ export default function Template() {
       const ctx = canvas.getContext("2d");
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-
       if (ctx !== null) {
         const customCtx = ctx;
+        customCtx.lineCap = "round";
         customCtx.lineJoin = "round";
         changeWeight(customCtx);
         changeColor(customCtx);
         setGetCtx(ctx);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -73,6 +72,7 @@ export default function Template() {
       changeColor(customCtx);
       setGetCtx(customCtx);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [color, eraseMode]);
 
   useEffect(() => {
@@ -81,6 +81,7 @@ export default function Template() {
       changeWeight(customCtx);
       setGetCtx(customCtx);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [weight]);
 
   const drawFn = (event: React.SyntheticEvent<HTMLCanvasElement, MouseEvent>) => {
@@ -101,7 +102,6 @@ export default function Template() {
   };
 
   const clicked = (e: React.SyntheticEvent<HTMLDivElement, MouseEvent>) => {
-    console.log(e.currentTarget === weghtModaltestRef.current);
     setWeightChange((prev) => !prev);
     setDisplayColorPicker(false);
   };
@@ -113,6 +113,7 @@ export default function Template() {
     const numbering = Number(e.target.value);
     setWeight(numbering);
   };
+
   return (
     <Container>
       <Toolbar>
@@ -127,13 +128,13 @@ export default function Template() {
         <EraserBox onClick={transformToEraseMode} changeColor={eraseMode ? "red" : "white"}>
           <BiEraser />
         </EraserBox>
-        <WeightSettingBox ref={weghtModalRef}>
+        <WeightSettingBox>
           <WeightButton onClick={clicked} changeColor={weightChange ? "red" : "white"}>
             <MdLineWeight />
           </WeightButton>
 
           {weightChange ? (
-            <WeightSetting ref={weghtModaltestRef}>
+            <WeightSetting>
               <WeightRange type="range" onChange={onChangeRangeWeight} value={weight} />
               <WeightText type="type" onChange={onChangeNumberWeight} value={weight} />
             </WeightSetting>
@@ -272,8 +273,8 @@ const Container = styled.div`
 `;
 const Canvas = styled.canvas`
   box-sizing: content-box;
-  width: 100%;
-  height: 100%;
+  width: ${window.innerWidth};
+  height: ${window.innerHeight};
   background-color: #ededed;
 `;
 

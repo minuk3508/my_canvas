@@ -21,6 +21,20 @@ time, mark, audio, video {
   font-size: 100%;
   font: inherit;
   vertical-align: baseline;
+  ::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: none;
+  
+}
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 20px;
+  
+}
+
 }
 /* HTML5 display-role reset for older browsers */
 article, aside, details, figcaption, figure,
