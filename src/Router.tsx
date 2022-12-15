@@ -1,11 +1,11 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Template from "./Template/Template";
+import WorldCanvas from "./Template/WorldCanvas";
 
 export default function Router() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Template />} />
+        <Route path="/" element={<WorldCanvas />} />
       </Routes>
     </BrowserRouter>
   );
