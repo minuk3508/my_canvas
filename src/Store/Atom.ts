@@ -3,9 +3,13 @@ import { atom } from "recoil";
 const DEFAULT_COLOR = { r: 0, g: 0, b: 0, a: 1 };
 const DEFAULT_WEIGHT = 1.5;
 
-export const changeToolMode_erase = atom({
-  key: "changeToolMode_erase",
-  default: false,
+interface toolMode {
+  mode: "line" | "erase" | "square";
+}
+
+export const changeToolMode = atom<toolMode>({
+  key: "changeToolMode",
+  default: { mode: "line" },
 });
 
 export const changeLineColor = atom({

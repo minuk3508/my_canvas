@@ -1,22 +1,23 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { useRecoilState } from "recoil";
-import { changeLineColor, changeLineWeight, changeToolMode_erase } from "../Store/Atom";
+import { changeLineColor, changeLineWeight, changeToolMode } from "../Store/Atom";
 import Toolbar from "../Component/Toolbar";
 
 export default function WorldCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const [getCtx, setGetCtx] = useState<CanvasRenderingContext2D>();
   const [getOverlayCtx, setGetOverlayCtx] = useState<CanvasRenderingContext2D>();
   const [painting, setPainting] = useState<boolean>(false);
-  const [eraseMode] = useRecoilState(changeToolMode_erase);
+  const [mode] = useRecoilState(changeToolMode);
   const [color] = useRecoilState(changeLineColor);
   const [weight] = useRecoilState(changeLineWeight);
   const [startPoint, setStartPoint] = useState<number[]>([0, 0]);
   const [endPoint, setEndPoint] = useState<number[]>([0, 0]);
 
+  //캔버스 원본 생성
   useEffect(() => {
     if (canvasRef.current !== null) {
       const canvas = canvasRef.current;
@@ -27,13 +28,13 @@ export default function WorldCanvas() {
         const customCtx = ctx;
         customCtx.lineCap = "round";
         customCtx.lineJoin = "round";
-        // customCtx.lineWidth = weight;
-        // customCtx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
         setGetCtx(customCtx);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  //overlay용 캔버스 생성
   useEffect(() => {
     if (overlayCanvasRef.current !== null) {
       const canvas = overlayCanvasRef.current;
@@ -100,7 +101,7 @@ export default function WorldCanvas() {
   };
 
   useEffect(() => {
-    if (getCtx !== undefined) {
+    if (getCtx !== undefined && mode.mode === "square") {
       getCtx.lineWidth = weight;
       getCtx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
       getCtx.strokeRect(
@@ -111,93 +112,63 @@ export default function WorldCanvas() {
       );
     }
   }, [painting]);
-  const changeColor = useCallback(
-    (ctx: CanvasRenderingContext2D) => {
-      ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
-    },
-    [color]
-  );
-  const changeWeight = useCallback(
-    (ctx: CanvasRenderingContext2D) => {
-      ctx.lineWidth = weight;
-    },
-    [weight]
-  );
 
   useEffect(() => {
-    if (getCtx !== undefined && eraseMode) {
-      const customCtx = getCtx;
-      customCtx.strokeStyle = `rgba( 237, 237, 237, 1 )`;
-      setGetCtx(customCtx);
-    } else if (getCtx !== undefined) {
-      const customCtx = getCtx;
-      changeColor(customCtx);
-      setGetCtx(customCtx);
+    if (containerRef !== undefined && mode.mode === "square") {
+      const div = document.createElement("div");
+      if (endPoint[0] > startPoint[0] && endPoint[1] > startPoint[1]) {
+        div.style.width = `${Math.abs(endPoint[0] - startPoint[0])}px`;
+        div.style.height = `${Math.abs(endPoint[1] - startPoint[1])}px`;
+        div.style.backgroundColor = "red";
+        div.style.position = "absolute";
+        div.style.top = `${startPoint[1]}px`;
+        div.style.left = `${startPoint[0]}px`;
+        div.style.zIndex = "2";
+        containerRef.current?.appendChild(div);
+      } else if (endPoint[0] < startPoint[0] && endPoint[1] > startPoint[1]) {
+        div.style.width = `${Math.abs(endPoint[0] - startPoint[0])}px`;
+        div.style.height = `${Math.abs(endPoint[1] - startPoint[1])}px`;
+        div.style.backgroundColor = "red";
+        div.style.position = "absolute";
+        div.style.top = `${startPoint[1]}px`;
+        div.style.left = `${endPoint[0]}px`;
+        div.style.zIndex = "2";
+        containerRef.current?.appendChild(div);
+      } else if (endPoint[0] > startPoint[0] && endPoint[1] < startPoint[1]) {
+        div.style.width = `${Math.abs(endPoint[0] - startPoint[0])}px`;
+        div.style.height = `${Math.abs(endPoint[1] - startPoint[1])}px`;
+        div.style.backgroundColor = "red";
+        div.style.position = "absolute";
+        div.style.top = `${endPoint[1]}px`;
+        div.style.left = `${startPoint[0]}px`;
+        div.style.zIndex = "2";
+        containerRef.current?.appendChild(div);
+      } else if (endPoint[0] < startPoint[0] && endPoint[1] < startPoint[1]) {
+        div.style.width = `${Math.abs(endPoint[0] - startPoint[0])}px`;
+        div.style.height = `${Math.abs(endPoint[1] - startPoint[1])}px`;
+        div.style.backgroundColor = "red";
+        div.style.position = "absolute";
+        div.style.top = `${endPoint[1]}px`;
+        div.style.left = `${endPoint[0]}px`;
+        div.style.zIndex = "2";
+        containerRef.current?.appendChild(div);
+      }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [color, eraseMode]);
-
-  useEffect(() => {
-    if (getCtx !== undefined) {
-      const customCtx = getCtx;
-      changeWeight(customCtx);
-      setGetCtx(customCtx);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [weight]);
-
-  const drawLineFn = (event: React.SyntheticEvent<HTMLCanvasElement, MouseEvent>) => {
-    const mouseX = event.nativeEvent.offsetX;
-    const mouseY = event.nativeEvent.offsetY;
-
-    if (!painting && getCtx !== undefined) {
-      getCtx.beginPath();
-      getCtx.moveTo(mouseX, mouseY);
-    } else if (painting && getCtx !== undefined) {
-      getCtx.lineTo(mouseX, mouseY);
-      getCtx.stroke();
-    }
-  };
-
-  // const drawSquareFn = (event: React.SyntheticEvent<HTMLCanvasElement, MouseEvent>) => {
-  //   const currentPoint_X = event.nativeEvent.offsetX;
-  //   const currentPoint_Y = event.nativeEvent.offsetY;
-  //   const customCtx = getCtx;
-
-  //   if (!painting && customCtx !== undefined) {
-  //     console.log(startPoint, endPoint);
-  //     setStartPoint([currentPoint_X, currentPoint_Y]);
-  //     setEndPoint([currentPoint_X, currentPoint_Y]);
-  //   } else if (painting && customCtx !== undefined) {
-  //     setEndPoint([currentPoint_X, currentPoint_Y]);
-
-  //     customCtx.strokeRect(
-  //       startPoint[0],
-  //       startPoint[1],
-  //       endPoint[0] - startPoint[0],
-  //       endPoint[1] - startPoint[1]
-  //     );
-  //   }
-  // };
+  }, [painting]);
 
   return (
-    <Container ref={scrollRef}>
+    <Container>
       <Toolbar />
-
-      <Canvas
-        ref={canvasRef}
-        // onMouseDown={() => setPainting(true)}
-        // onMouseUp={() => setPainting(false)}
-        // onMouseMove={drawLineFn}
-        // onMouseLeave={() => setPainting(false)}
-      ></Canvas>
-      <OverlayCanvas
-        ref={overlayCanvasRef}
-        onMouseDown={() => setPainting(true)}
-        onMouseUp={() => setPainting(false)}
-        onMouseMove={overlayDrawSquareFn}
-        onMouseLeave={() => setPainting(false)}
-      ></OverlayCanvas>
+      <Canvas ref={canvasRef}></Canvas>
+      <OverlayCanvasWrapper ref={containerRef}>
+        <OverlayCanvas
+          ref={overlayCanvasRef}
+          onMouseDown={() => setPainting(true)}
+          onMouseUp={() => setPainting(false)}
+          onMouseMove={mode.mode === "square" ? overlayDrawSquareFn : overlayDrawLineFn}
+          onMouseLeave={() => setPainting(false)}
+        ></OverlayCanvas>
+      </OverlayCanvasWrapper>
     </Container>
   );
 }
@@ -209,6 +180,13 @@ const Container = styled.div`
   align-items: center;
   width: 100vw;
   height: 100vh;
+`;
+const OverlayCanvasWrapper = styled.div`
+  position: absolute;
+  box-sizing: content-box;
+  width: 3500px;
+  height: 2500px;
+  background-color: rgba(255, 255, 255, 0);
 `;
 const OverlayCanvas = styled.canvas`
   position: absolute;

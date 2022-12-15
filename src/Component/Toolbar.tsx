@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from "react";
 import styled, { keyframes } from "styled-components";
-import { BiEraser } from "react-icons/bi";
+import { BiEraser, BiSquare } from "react-icons/bi";
 import { MdLineWeight } from "react-icons/md";
 import { useRecoilState } from "recoil";
-import { changeLineColor, changeLineWeight, changeToolMode_erase } from "../Store/Atom";
+import { changeLineColor, changeLineWeight, changeToolMode } from "../Store/Atom";
 import { ColorResult, SketchPicker } from "react-color";
 
 type ColorPickerProps = {
@@ -14,10 +14,9 @@ type ModColor = {
 };
 
 export default function Toolbar() {
-  const [eraseMode, setEraseMode] = useRecoilState(changeToolMode_erase);
+  const [mode, setMode] = useRecoilState(changeToolMode);
   const [color, setColor] = useRecoilState(changeLineColor);
   const [weight, setWeight] = useRecoilState(changeLineWeight);
-
   const [displayColorPicker, setDisplayColorPicker] = useState<boolean>(false);
   const [weightChange, setWeightChange] = useState<boolean>(false);
 
@@ -30,8 +29,16 @@ export default function Toolbar() {
   }, []);
 
   const transformToEraseMode = () => {
-    setEraseMode((prev) => !prev);
+    setMode({ mode: "erase" });
     setDisplayColorPicker(false);
+  };
+  const transformToSquareMode = () => {
+    if (mode.mode !== "square") {
+      setMode({ mode: "square" });
+      setDisplayColorPicker(false);
+    } else {
+      setMode({ mode: "line" });
+    }
   };
 
   const clicked = (e: React.SyntheticEvent<HTMLDivElement, MouseEvent>) => {
@@ -57,7 +64,10 @@ export default function Toolbar() {
           </ColorChoiceBox>
         ) : null}
       </ColorPickerBox>
-      <EraserBox onClick={transformToEraseMode} changeColor={eraseMode ? "red" : "white"}>
+      <EraserBox
+        onClick={transformToEraseMode}
+        changeColor={mode.mode === "erase" ? "red" : "white"}
+      >
         <BiEraser />
       </EraserBox>
       <WeightSettingBox>
@@ -72,9 +82,31 @@ export default function Toolbar() {
           </WeightSetting>
         ) : null}
       </WeightSettingBox>
+      <SquareModeButtonBox
+        onClick={transformToSquareMode}
+        changeColor={mode.mode === "square" ? "red" : "white"}
+      >
+        <BiSquare />
+      </SquareModeButtonBox>
     </Container>
   );
 }
+
+const SquareModeButtonBox = styled.div<ModColor>`
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 25px;
+  height: 25px;
+  font-size: 25px;
+  border-radius: 50%;
+  background-color: ${(props) => props.changeColor};
+  transition: 0.3s all;
+  :hover {
+    cursor: pointer;
+  }
+`;
 const Container = styled.div`
   position: fixed;
   left: 10px;
