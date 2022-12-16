@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import styled, { keyframes } from "styled-components";
-import { BiEraser, BiSquare } from "react-icons/bi";
+import { BiEraser, BiSquare, BiCircle } from "react-icons/bi";
 import { MdLineWeight } from "react-icons/md";
 import { useRecoilState } from "recoil";
 import { changeLineColor, changeLineWeight, changeToolMode } from "../Store/Atom";
@@ -9,7 +9,7 @@ import { ColorResult, SketchPicker } from "react-color";
 type ColorPickerProps = {
   color: string;
 };
-type ModColor = {
+type ModeColor = {
   changeColor: string;
 };
 
@@ -29,8 +29,12 @@ export default function Toolbar() {
   }, []);
 
   const transformToEraseMode = () => {
-    setMode({ mode: "erase" });
-    setDisplayColorPicker(false);
+    if (mode.mode !== "erase") {
+      setMode({ mode: "erase" });
+      setDisplayColorPicker(false);
+    } else {
+      setMode({ mode: "line" });
+    }
   };
   const transformToSquareMode = () => {
     if (mode.mode !== "square") {
@@ -40,8 +44,16 @@ export default function Toolbar() {
       setMode({ mode: "line" });
     }
   };
+  const transformToCircleMode = () => {
+    if (mode.mode !== "circle") {
+      setMode({ mode: "circle" });
+      setDisplayColorPicker(false);
+    } else {
+      setMode({ mode: "line" });
+    }
+  };
 
-  const clicked = (e: React.SyntheticEvent<HTMLDivElement, MouseEvent>) => {
+  const clicked = () => {
     setWeightChange((prev) => !prev);
     setDisplayColorPicker(false);
   };
@@ -64,14 +76,11 @@ export default function Toolbar() {
           </ColorChoiceBox>
         ) : null}
       </ColorPickerBox>
-      <EraserBox
-        onClick={transformToEraseMode}
-        changeColor={mode.mode === "erase" ? "red" : "white"}
-      >
+      <EraserBox onClick={transformToEraseMode} changeColor={mode.mode === "erase" ? "0.7" : "0"}>
         <BiEraser />
       </EraserBox>
       <WeightSettingBox>
-        <WeightButton onClick={clicked} changeColor={weightChange ? "red" : "white"}>
+        <WeightButton onClick={clicked} changeColor={weightChange ? "0.7" : "0"}>
           <MdLineWeight />
         </WeightButton>
 
@@ -84,15 +93,20 @@ export default function Toolbar() {
       </WeightSettingBox>
       <SquareModeButtonBox
         onClick={transformToSquareMode}
-        changeColor={mode.mode === "square" ? "red" : "white"}
+        changeColor={mode.mode === "square" ? "0.7" : "0"}
       >
         <BiSquare />
       </SquareModeButtonBox>
+      <CircleModeButtonBox
+        onClick={transformToCircleMode}
+        changeColor={mode.mode === "circle" ? "0.7" : "0"}
+      >
+        <BiCircle />
+      </CircleModeButtonBox>
     </Container>
   );
 }
-
-const SquareModeButtonBox = styled.div<ModColor>`
+const CircleModeButtonBox = styled.div<ModeColor>`
   position: relative;
   display: flex;
   justify-content: center;
@@ -100,8 +114,23 @@ const SquareModeButtonBox = styled.div<ModColor>`
   width: 25px;
   height: 25px;
   font-size: 25px;
-  border-radius: 50%;
-  background-color: ${(props) => props.changeColor};
+  padding-bottom: 5px;
+  border-bottom: 5px solid rgba(92, 129, 250, ${(props) => props.changeColor});
+  transition: 0.3s all;
+  :hover {
+    cursor: pointer;
+  }
+`;
+const SquareModeButtonBox = styled.div<ModeColor>`
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 25px;
+  height: 25px;
+  font-size: 25px;
+  padding-bottom: 5px;
+  border-bottom: 5px solid rgba(92, 129, 250, ${(props) => props.changeColor});
   transition: 0.3s all;
   :hover {
     cursor: pointer;
@@ -181,22 +210,22 @@ const WeightSettingBox = styled.div`
   }
 `;
 
-const WeightButton = styled.div<ModColor>`
+const WeightButton = styled.div<ModeColor>`
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
   height: 100%;
   font-size: 25px;
-  border-radius: 50%;
-  background-color: ${(props) => props.changeColor};
+  padding-bottom: 5px;
+  border-bottom: 5px solid rgba(92, 129, 250, ${(props) => props.changeColor});
   transition: 0.3s all;
   :hover {
     cursor: pointer;
   }
 `;
 
-const EraserBox = styled.div<ModColor>`
+const EraserBox = styled.div<ModeColor>`
   position: relative;
   display: flex;
   justify-content: center;
@@ -204,8 +233,8 @@ const EraserBox = styled.div<ModColor>`
   width: 25px;
   height: 25px;
   font-size: 25px;
-  border-radius: 50%;
-  background-color: ${(props) => props.changeColor};
+  padding-bottom: 5px;
+  border-bottom: 5px solid rgba(92, 129, 250, ${(props) => props.changeColor});
   transition: 0.3s all;
   :hover {
     cursor: pointer;
